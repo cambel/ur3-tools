@@ -41,15 +41,15 @@
                 },
                 "topics": {
                   "type": "repr",
-                  "repr": "[u'/ur3/ee_ft/wrench/force/y', u'/ur3/ee_ft/wrench/force/x', u'/ur3/ee_ft/wrench/force/z']"
+                  "repr": "[u'/ur3/ee_ft/force/y', u'/ur3/ee_ft/force/x', u'/ur3/ee_ft/force/z']"
                 },
                 "y_limits": {
                   "type": "repr",
-                  "repr": "[-324.07674504875155, 296.14039153178766]"
+                  "repr": "[-20.0, 50.0]"
                 },
                 "x_limits": {
                   "type": "repr",
-                  "repr": "[-75.98080968856812, 34.019190311431885]"
+                  "repr": "[0, 20.0]"
                 }
               },
               "groups": {}

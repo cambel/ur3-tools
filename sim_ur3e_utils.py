@@ -8,7 +8,7 @@ from ur_control import utils, spalg, transformations
 from ur_control.constants import ROBOT_GAZEBO, ROBOT_UR_MODERN_DRIVER, ROBOT_UR_RTDE_DRIVER
 from ur_control.impedance_control import AdmittanceModel
 from ur_control.arm import Arm
-
+from pyquaternion import Quaternion
 import timeit
 
 rospy.init_node('ur3_force_control')
@@ -25,7 +25,7 @@ def go_to(wait=True):
     q = [1.89951, -1.89104, -1.31663,  0.00926,  1.16537,  1.35538]
     q = [1.68605, -2.11149, -1.01201, -0.02208,  1.48276,  1.58753]
 
-    arm.set_joint_positions(position=q, wait=wait, t=3)
+    arm.set_joint_positions(position=q, wait=wait, t=1)
 
 
 def admittance_control(method="integration"):
@@ -52,8 +52,32 @@ def admittance_control(method="integration"):
     go_to(True)
 
 def rotation():
+    go_to(True)
     target = [-0.08855, -0.44407,  0.44978,  0.51342,  0.38084, -0.29487, 0.71022]
-    pass
+    current_quaternion = arm.end_effector()[3:]
+
+    from_quaternion = Quaternion(current_quaternion)
+
+    rotate = Quaternion(axis=[1,0,0], degrees=-10.0)
+    to_quaternion = from_quaternion * rotate
+
+    rotate = Quaternion(axis=[0,1,0], degrees=-50.0)
+    to_quaternion *= rotate
+
+    rotate = Quaternion(axis=[0,0,1], degrees=-10.0)
+    to_quaternion *= rotate
+
+    for q in Quaternion.intermediates(q0=from_quaternion, q1=to_quaternion, n=10):
+        pose = np.concatenate((arm.end_effector()[:3], q.elements))
+        arm.set_target_pose_flex(pose, t=1.0/10.0)
+        rospy.sleep(1.0/10.0)
+
+
+    # slerp = Quaternion.slerp(q0=from_quaternion,q1=to_quaternion, amount=0.5)
+    # pose = np.concatenate((arm.end_effector()[:3], slerp.elements))
+    # arm.set_target_pose(pose, wait=True, t=1)
+    # pose = np.concatenate((arm.end_effector()[:3], to_quaternion.elements))
+    # arm.set_target_pose(pose, wait=True, t=1)
 
 def main():
     """ Main function to be run. """
@@ -68,17 +92,11 @@ def main():
                         help='integration admittance')
     parser.add_argument('-r', '--rotation', action='store_true',
                         help='Rotation slerp')
-    parser.add_argument('--robot', action='store_true', help='for the real robot')
     parser.add_argument('--relative', action='store_true', help='relative to end-effector')
-    parser.add_argument('--beta', action='store_true', help='for the real robot. beta driver')
 
     args = parser.parse_args()
 
     driver = ROBOT_GAZEBO
-    if args.robot:
-        driver = ROBOT_UR_MODERN_DRIVER
-    elif args.beta:
-        driver = ROBOT_UR_RTDE_DRIVER
 
     global arm
     arm = Arm(ft_sensor=True, driver=driver)

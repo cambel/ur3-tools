@@ -30,6 +30,24 @@ def place_models():
     models = [[Model(model_names[0], objpose[0], orientation=objpose[1])]]
     GazeboModels(models, 'ur3_gazebo')
 
+def place_soft():
+    name = "simple_peg_board"
+    objpose = [[-0.41, -0.25, 0.816082], [0, 0.0344632, 0, 0.999406]]
+    string_model = PEG_BOARD.format(1e6)
+    models = [[Model(name, objpose[0], orientation=objpose[1], file_type='string', string_model=string_model, reference_frame="world")]]
+    GazeboModels(models, 'ur3_gazebo')
+
+def place_door():
+    name = "hinged_door"
+    objpose = [[-0.40, 0.20, 0.76], [ 0, 0, 0.9238795, 0.3826834 ]]
+    models = [[Model(name, objpose[0], orientation=objpose[1])]]
+    GazeboModels(models, 'ur3_gazebo')
+
+def place_ring():
+    name = "lens_ring"
+    objpose = [[-0.370381, -0.23, 0.82], [ 0, 0, -0.7071068, 0.7071068 ]]
+    models = [[Model(name, objpose[0], orientation=objpose[1])]]
+    GazeboModels(models, 'ur3_gazebo')
 
 def main():
     """ Main function to be run. """
@@ -38,14 +56,24 @@ def main():
                         help='Place models')
     parser.add_argument('--target', action='store_true',
                         help='Place targets')
-
+    parser.add_argument('--soft', action='store_true',
+                        help='Place soft peg board')
+    parser.add_argument('--door', action='store_true',
+                        help='Place door')
+    parser.add_argument('--ring', action='store_true',
+                        help='Place ring')
     args = parser.parse_args()
 
     if args.place:
         place_models()
     if args.target:
         place_target()
-
+    if args.soft:
+        place_soft()
+    if args.door:
+        place_door()
+    if args.ring:
+        place_ring()
 
 if __name__ == "__main__":
     main()

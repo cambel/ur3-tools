@@ -4,7 +4,7 @@ import numpy as np
 import copy
 from ur_control import utils, spalg
 from ur_control.constants import ROBOT_GAZEBO, ROBOT_UR_MODERN_DRIVER, ROBOT_UR_RTDE_DRIVER
-from ur_control.force_controller import ForceController, ForcePositionController
+from ur_control.hybrid_controller import ForceController, ForcePositionController
 
 from ur_control.arm import Arm
 

@@ -3,7 +3,7 @@ import sys
 import timeit
 from pyquaternion import Quaternion
 from ur_control.arm import Arm
-from ur_control.force_controller import ForcePositionController
+from ur_control.hybrid_controller import ForcePositionController
 from ur_control.impedance_control import AdmittanceModel
 from ur_control.constants import ROBOT_GAZEBO, ROBOT_UR_MODERN_DRIVER, ROBOT_UR_RTDE_DRIVER
 from ur_control import utils, spalg, transformations
@@ -85,7 +85,7 @@ def hybrid():
 
     model.set_goals(position=target, force=np.zeros(6))
 
-    arm.set_hybrid_control_ik(model, timeout=10.0, max_force=30)
+    arm.set_hybrid_control(model, timeout=10.0, max_force=30)
     go_to(True)
 
 

@@ -3,9 +3,9 @@ import rospy
 import numpy as np
 import copy
 
-from gps.agent.utils.gazebo_spawner import GazeboModels
-from gps.agent.utils.model import Model
-from gps.agent.utils.basic_models import SPHERE, PEG_BOARD
+from ur_gazebo.gazebo_spawner import GazeboModels
+from ur_gazebo.model import Model
+from ur_gazebo.basic_models import SPHERE, PEG_BOARD, BOX
 
 rospy.init_node('gazebo_spawner_ur3e')
 
@@ -32,9 +32,23 @@ def place_models():
 
 def place_soft():
     name = "simple_peg_board"
-    objpose = [[-0.41, -0.25, 0.816082], [0, 0.0344632, 0, 0.999406]]
-    string_model = PEG_BOARD.format(1e6)
-    models = [[Model(name, objpose[0], orientation=objpose[1], file_type='string', string_model=string_model, reference_frame="world")]]
+    # objpose = [[-0.41, -0.25, 0.816082], [0, 0.0344632, 0, 0.999406]]
+    # objpose = [[-0.386844, -0.337578, 0.955348], [0, 0.0344632, 0, 0.999406]]
+    objpose = [[-0.386844, -0.317578, 0.975348], [ 3.141590, 0.068940, 0]]
+    objpose = [[-0.00314217, -0.33487248,  0.45300905], [ -0.00198517, -0.70632716,  0.70786236, -0.005]]
+    objpose = [[-0.18978424, -0.17577134,  0.38183659], [ -0.50218089,  0.48843603,  0.51447979, -0.494]]
+    objpose = [[-0.3349516 ,  0.00327044,  0.45290458], [ -0.50128434, -0.49779569,  0.50398595,  0.496]]
+    
+    stiffness = 1e5
+    g = 0
+    if stiffness > 1e5:
+        g = np.interp(stiffness,[1e5, 1e6],[1,0])
+    else:
+        g = np.interp(stiffness,[1e4, 1e5],[0,1])
+    b = np.interp(stiffness,[1e4, 1e5],[1,0])
+    r = np.interp(stiffness,[1e5, 1e6],[0,1])
+    string_model = PEG_BOARD.format(r,g,b, stiffness)
+    models = [[Model(name, objpose[0], orientation=objpose[1], file_type='string', string_model=string_model, reference_frame="base_link"), create_box()]]
     GazeboModels(models, 'ur3_gazebo')
 
 def place_door():
@@ -48,6 +62,14 @@ def place_ring():
     objpose = [[-0.370381, -0.23, 0.82], [ 0, 0, -0.7071068, 0.7071068 ]]
     models = [[Model(name, objpose[0], orientation=objpose[1])]]
     GazeboModels(models, 'ur3_gazebo')
+
+def create_box():
+    obj = BOX % ("box", "0.1", "0.1", "0.01", "Black", "0.1", "0.1", "0.01")
+    model_names = ["box"]
+    # objpose = [[-0.41, -0.25, 0.811082], [0, 0.0344632, 0, 0.999406]]
+    objpose = [[-0.386844, -0.337578, 0.950348], [0, 0.0344632, 0, 0.999406]]
+
+    return Model(model_names[0], objpose[0], orientation=objpose[1], file_type='string', string_model=obj, reference_frame="world")
 
 def main():
     """ Main function to be run. """

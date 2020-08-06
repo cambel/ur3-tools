@@ -1,12 +1,16 @@
 import csv
 import numpy as np
 
+def running_mean(x, N):
+    cumsum = np.cumsum(np.insert(x, 0, 0)) 
+    return (cumsum[N:] - cumsum[:-N]) / float(N)
+
 def extrapolate(x, y, points=12000):
     # calculate polynomial
-    z = np.polyfit(x, y, 15)
+    z = np.polyfit(x, y, 5)
     f = np.poly1d(z)
 
-    other_x = np.linspace(1, points, int(points/100))
+    other_x = np.linspace(1, points, int(points/1))
     # other_y = f(other_x)
     other_y = np.interp(other_x, x, y)
 
@@ -29,7 +33,7 @@ def prepare_data(files, weight, points=12000):
     if f.endswith('.csv'):
         x = _x
     else:
-        x = np.linspace(0, 200.0*len(d[0]), len(d[0]))
+        x = np.linspace(0, 150.0*len(d[0]), len(d[0]))
     print(np.array(d).shape)
     y = np.average(d, axis=0)
     y_std = np.std(d, axis=0) 

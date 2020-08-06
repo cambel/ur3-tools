@@ -7,9 +7,10 @@ import copy
 from ur_control import utils, spalg, transformations
 from ur_control.constants import ROBOT_GAZEBO, ROBOT_UR_MODERN_DRIVER, ROBOT_UR_RTDE_DRIVER
 from ur_control.impedance_control import AdmittanceModel
-from ur_control.arm import Arm
+from ur_control.compliant_controller import CompliantController
 from pyquaternion import Quaternion
 import timeit
+
 
 rospy.init_node('ur3_force_control')
 js_rate = utils.read_parameter('/joint_state_controller/publish_rate', 125.0)  # read publish rate if it does exist, otherwise set publish rate
@@ -25,31 +26,59 @@ def go_to(wait=True):
     q = [1.89951, -1.89104, -1.31663,  0.00926,  1.16537,  1.35538]
     q = [1.90647, -1.02627, -1.30762, -0.46714,  1.31118,  0.00343] # door
     q = [1.93048, -2.13818, -1.21322,  0.36888,  1.05412,  1.09136]
+    q = [-2.27058, -1.72553,  1.89436, -3.41743,  5.39808,  0.01899]
+    q = [-2.70307, -1.83606,  1.46569,  0.34989,  2.01514, -0.04245]
+    q = [-2.25055, -1.7502 ,  1.8647 , -3.25888,  5.39604,  0.01208]
+    q = [-3.82148, -1.74987,  1.86476, -3.25883,  5.39585,  0.01206]
 
-    arm.set_joint_positions(position=q, wait=wait, t=0.2)
+    arm.set_joint_positions(position=q, wait=wait, t=0.5)
+
+def trajectory():
+    traj = [
+        [-2.25055, -1.7502 ,  1.8647 , -3.25888,  5.39604,  0.01208],
+        [-3.82148, -1.74987,  1.86476, -3.25883,  5.39585,  0.01206],
+        [-3.12333, -1.74988,  1.86476, -3.25883,  5.39585,  0.01205],
+        [-1.55255, -1.74981,  1.86477, -3.25882,  5.39581,  0.01205],
+        [-0.67992, -1.74976,  1.86478, -3.25882,  5.39578,  0.01207],
+        [-2.36069, -1.54673,  1.30599, -4.53528,  4.66136,  0.74619],
+        [-2.76354, -1.45668,  1.36001, -4.24608,  4.47966,  1.1765 ],
+        [-1.38552, -1.16804,  0.83775, -4.41607,  5.04895, -0.2031 ]
+    ]
+    for t in traj:
+        arm.set_joint_positions(position=t, wait=True, t=1.0)
 
 
 def admittance_control(method="integration"):
     print("Admitance Control", method)
     # arm.set_wrench_offset(override=True)
-    e = 40
-    # K = np.ones(6)*100000.0
-    # M = np.ones(6)
-    K = 300.0 #3000
-    M = 1.
+    e = 0.0001
+    K = np.ones(6) * 300.0
+    M = np.ones(6) * 0.01
+    # B = np.ones(6) * 10000
     B = e*2*np.sqrt(K*M)
+    # K = 300.0 #3000
+    # M = 1.
     dt = 0.002
     x0 = arm.end_effector()
-    admittance_ctrl = AdmittanceModel(M, K, B, dt, method=method)
+    model = AdmittanceModel(M, K, B, dt, method=method)
 
+    k = 1200
+    position_kp = np.array([2.0e-3, 2.0e-3, 2.0e-3, 1.0e-2, 1.0e-2, 1.0e-2]) * k
+    position_kd = np.array([2.0e-3, 2.0e-3, 2.0e-3, 1.0e-2, 1.0e-2, 1.0e-2]) * np.sqrt(k)
+    model.p_controller = utils.PID(Kp=position_kp, Kd=position_kd)
+    
     target = x0[:]
-    # target[2] = 0.03
-    delta_x = np.array([0., -0.02, -0.0, 0., 0., 0.])
-    target = transformations.pose_euler_to_quaternion(target, delta_x)
-    print("Impedance model", admittance_ctrl)
-    arm.set_impedance_control(target, admittance_ctrl, timeout=10., max_force=3000, indices=[1])
-    # data = actuate(target, admittance_ctrl, 10, method, data=[])
-    # np.save("/root/dev/tools/"+method, np.array(data))
+    target[1] -= 0.02
+    target[2] += 0.02
+    
+    print("Impedance model", model)
+    timeout = 10.
+    initime = rospy.get_time()
+    while not rospy.is_shutdown() \
+                and (rospy.get_time() - initime) < timeout: 
+        arm.set_impedance_control(target, model, timeout=0.05, max_force=500)
+    
+    print("ok?")
     go_to(True)
 
 def rotation():
@@ -172,7 +201,7 @@ def main():
     driver = ROBOT_GAZEBO
 
     global arm
-    arm = Arm(ft_sensor=True, driver=driver, ee_transform=[-0.,   -0.,   0.05,  0,    0.,    0.,    1.  ])
+    arm = CompliantController(ft_sensor=True, driver=driver, ee_transform=[-0.,   -0.,   0.05,  0,    0.,    0.,    1.  ])
 
     if args.move:
         go_to()
@@ -189,6 +218,7 @@ def main():
         rotation()
     if args.rotation_pd:
         rotation_pd()
+    trajectory()
 
     print("real time", round(timeit.default_timer() - real_start_time, 3))
     print("ros time", round(rospy.get_time() - ros_start_time, 3))

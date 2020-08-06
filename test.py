@@ -1,55 +1,69 @@
-import sys
-import math
+import numpy as np
+np.set_printoptions(suppress=True)
+np.set_printoptions(linewidth=np.inf)
+# cost_l1 = 1.0
+# cost_l2 = 10.0
+# cost_alpha = 0.00001
 
-def simplify_n(spells):
-    n = []
-    for s in spells:
-        for s2 in spells:
-            if s == s2:
-                continue
-            if s % s2 != 0:
-                if s not in n:
-                    n.append(s)
-    return n
+# def l1l2(dist, weights=[0.35, 0.35, 0.35, 0.1, 0.1, 0.1]):
+#     l1 = cost_l1 * np.array(weights)
+#     l2 = cost_l2 * np.array(weights)
+#     dist = dist
+#     norm = (0.5 * (dist ** 2) * l2 +
+#             np.log(cost_alpha + (dist ** 2)) * l1)
+#     return norm.sum()
 
-def death_n(lower_bound, upper_bound, spells):
-    total = 0
-    for s in spells:
-        multiples = math.floor(max(upper_bound/s - (lower_bound-1)/s, 0))
-        total += multiples
+# print( l1l2(np.zeros(6)))
+# print( l1l2(np.ones(6)))
 
-    duplicates = 0
-    for i in range(len(spells)):
-        for j in range(len(spells)-i-1):
-            duplicates += find_duplicates(spells[i], spells[i+(j+1)], lower_bound, upper_bound)
-    
-    return total - duplicates
+# a = '/home/cambel/dev/ft_data.npy'
+# # b = '/media/cambel/Extra/research/IROS20_revised/SAC/fuji-pc/no_penalization2/03-no-step/state_20200511T085019impedance13-2.npy'
+# # c = '/media/cambel/Extra/research/IROS20_revised/SAC/fuji-pc/no_penalization2/03-no-step/state_20200511T085019impedance13-3.npy'
+# an = np.load(a,allow_pickle=True)
+# # for d in an:
 
-# Function to count the numbe of grey tiles  
-def find_duplicates(x, y, l, r) : 
-  
-    lcm = (x * y) // math.gcd(x, y) 
-  
-    # Number multiple of lcm less than L  
-    count1 = (l - 1) // lcm 
-  
-    # Number of multiples of lcm less than R+1  
-    countr = r // lcm 
-  
-    return countr - count1 
+# # cn = np.load(c,allow_pickle=True)
+# ft = np.array([a for a in an[:,0]])
+# print(an.shape)
+# print(ft.shape)
+# print(ft[0])
+# print(np.array(an[0]).shape)
+# print(np.array(an[0])[0])
+# print(np.array(an[3])[0])
+# print(np.array(an[0]).shape)
+# print(np.array(an[0])[0])
+# c = np.delete(an, 0,axis=0)
+# print(c.shape)
 
-def main(argv):
-    lower_bound = int(argv[0])
-    upper_bound = int(argv[1])
-    m = int(argv[2])
-    n = list(map(int, argv[3:]))
+# bn = np.load(b, allow_pickle=True)
+# cn = np.concatenate((an, bn))
+# np.save(c, cn)
+# np.save(a, c)
 
-    if 1 in n:
-        print(0)
-        return
+# from pyquaternion import Quaternion
+# from ur_control.transformations import integrateUnitQuaternionDMM, integrateUnitQuaternionEuler
 
-    deaths = death_n(lower_bound, upper_bound, n)
-    print((upper_bound-lower_bound+1) - deaths)        
+# q0 = Quaternion([.5,.5,.5,.5])
+# q0.normalised
+# print("q0", q0)
+# w = np.zeros(3)
+# w[0] = 1
+# dt = 0.05
 
-if __name__ == "__main__":
-    main(sys.argv[1:])
+# print(integrateUnitQuaternionDMM(q0,w,dt))
+# print(integrateUnitQuaternionEuler(q0,w,dt))
+
+# from ur_control import transformations
+# true_target = [-0.00312934, -0.37939538,  0.4540351 , -0.00235073, -0.6813838 ,  0.73190453, -0.00513233]
+# error = np.random.normal(scale=[0.005,0.005,0.005,0.005,0.005,0.005], size=6)
+# new_target = transformations.pose_euler_to_quaternion(true_target, error)
+
+# print(new_target)
+
+
+## remove outliers
+filename = '/media/cambel/Extra/research/MDPI/simulation/domain-rand/individual/p_24/20200716T105106.195386_SAC_randerror_p24/detailed_log.npy'
+a = np.load(filename, allow_pickle=True)
+b = a[1:]
+print(a.shape, b.shape)
+np.save(filename,b)

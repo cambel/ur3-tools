@@ -10,8 +10,8 @@ from ur_control.arm import Arm
 
 import matplotlib.pyplot as plt
 
-from gps.agent.utils.gazebo_spawner import GazeboModels
-from gps.agent.utils.model import Model
+from ur_gazebo.gazebo_spawner import GazeboModels
+from ur_gazebo.model import Model
 
 import timeit
 
@@ -56,7 +56,7 @@ def hover():
 
 
 def place_target():
-    from gps.agent.utils.basic_models import SPHERE
+    from ur_gazebo.basic_models import SPHERE
     sphere = SPHERE % ("target", "0.025", "GreenTransparent")
     model_names = ["target"]
     objpose = [[0.0131,  0.4019,  0.3026]]

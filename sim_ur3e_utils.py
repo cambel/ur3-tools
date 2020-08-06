@@ -7,8 +7,8 @@ import copy
 from ur_control import utils, spalg, transformations
 from ur_control.constants import ROBOT_GAZEBO, ROBOT_UR_MODERN_DRIVER, ROBOT_UR_RTDE_DRIVER
 from ur_control.impedance_control import AdmittanceModel
-from ur_control.arm import Arm
-
+from ur_control.compliant_controller import CompliantController
+from pyquaternion import Quaternion
 import timeit
 
 rospy.init_node('ur3_force_control')
@@ -19,41 +19,165 @@ arm = None
 def go_to(wait=True):
     q = [0.171, -0.912,  2.21, -2.866, -1.571,  0.169]
     q = [-0.16 , -0.832,  1.863, -0.751, -0.213, -1.857]
-    q = np.deg2rad([90.0, 0.0, 45.0, 0.0, -90.0, 0.0])
     q = np.deg2rad([118.35, -92.94, -94.20, 3.53, 57.27, 78.29]) #2.06563, -1.62208, -1.64403,  0.06159,  0.9995 ,  1.36647
     q = [1.96414, -1.9198 , -1.3648 ,  0.08443,  1.10098,  1.35949]
+    q = np.deg2rad([90.0, 0.0, 45.0, 0.0, -90.0, 0.0])
     q = [1.89951, -1.89104, -1.31663,  0.00926,  1.16537,  1.35538]
-    q = [1.68605, -2.11149, -1.01201, -0.02208,  1.48276,  1.58753]
+    q = [1.90647, -1.02627, -1.30762, -0.46714,  1.31118,  0.00343] # door
+    q = [1.93048, -2.13818, -1.21322,  0.36888,  1.05412,  1.09136]
+    q = [-1.56411, -1.47954,  1.71492, -3.37889, -1.57846,  3.20614]
 
-    arm.set_joint_positions(position=q, wait=wait, t=3)
+    arm.set_joint_positions(position=q, wait=wait, t=0.5)
+    # q = Quaternion([1,0.,0])
+    # q = q.rotate([-0.49867152,  0.49256764,  0.520048  , -0.4881126])
+    # p = [0.37788005, -0.16770979,  0.37612351] + q
+    # arm.set_target_pose(pose=p,wait=True,t=1)
 
+
+def move():
+    wrs2 = [
+    [-1.49465, -1.3473 ,  2.01658, -4.1342 , -1.66235,  3.145],
+    [-1.49932, -1.29612,  1.82598, -3.92481, -1.65924,  3.15111]
+    ]
+    q = wrs2
+
+    start_time = timeit.default_timer()
+    arm.set_joint_positions(position=q[0], wait=True, t=3)
+    arm.set_joint_positions(position=q[1], wait=True, t=3)
+    end_time = timeit.default_timer() - start_time
+    print("time", end_time)
 
 def admittance_control(method="integration"):
     print("Admitance Control", method)
     # arm.set_wrench_offset(override=True)
-    e = 40
-    # K = np.ones(6)*100000.0
-    # M = np.ones(6)
-    K = 300.0 #3000
-    M = 1.
+    e = 0.0001
+    K = np.ones(6) * 300.0
+    M = np.ones(6) * 0.01
+    # B = np.ones(6) * 10000
     B = e*2*np.sqrt(K*M)
+    # K = 300.0 #3000
+    # M = 1.
     dt = 0.002
     x0 = arm.end_effector()
-    admittance_ctrl = AdmittanceModel(M, K, B, dt, method=method)
+    model = AdmittanceModel(M, K, B, dt, method=method)
 
+    k = 1200
+    position_kp = np.array([2.0e-3, 2.0e-3, 2.0e-3, 1.0e-2, 1.0e-2, 1.0e-2]) * k
+    position_kd = np.array([2.0e-3, 2.0e-3, 2.0e-3, 1.0e-2, 1.0e-2, 1.0e-2]) * np.sqrt(k)
+    model.p_controller = utils.PID(Kp=position_kp, Kd=position_kd)
+    
     target = x0[:]
-    # target[2] = 0.03
-    delta_x = np.array([0., -0.02, -0.0, 0., 0., 0.])
-    target = transformations.pose_euler_to_quaternion(target, delta_x)
-    print("Impedance model", admittance_ctrl)
-    arm.set_impedance_control(target, admittance_ctrl, timeout=10., max_force=3000, indices=[1])
-    # data = actuate(target, admittance_ctrl, 10, method, data=[])
-    # np.save("/root/dev/tools/"+method, np.array(data))
+    target[1] -= 0.02
+    target[2] += 0.02
+    
+    print("Impedance model", model)
+    timeout = 10.
+    initime = rospy.get_time()
+    while not rospy.is_shutdown() \
+                and (rospy.get_time() - initime) < timeout: 
+        arm.set_impedance_control(target, model, timeout=0.05, max_force=500)
+    
+    print("ok?")
     go_to(True)
 
 def rotation():
-    target = [-0.08855, -0.44407,  0.44978,  0.51342,  0.38084, -0.29487, 0.71022]
-    pass
+    go_to(True)
+    target = [-0.09108, -0.51868,  0.47657, -0.49215, -0.48348,  0.51335, -0.5104]
+    target_quaternion = Quaternion(np.roll(target[3:], 1))
+    current_quaternion = arm.end_effector()[3:]
+
+    from_quaternion = Quaternion(np.roll(current_quaternion, 1))
+
+    rotate = Quaternion(axis=[1,0,0], degrees=00.0)
+    to_quaternion = from_quaternion * rotate
+
+    # rotate = Quaternion(axis=[0,1,0], degrees=-50.0)
+    # to_quaternion *= rotate
+
+    rotate = Quaternion(axis=[0,0,1], degrees=50.0)
+    to_quaternion *= rotate
+
+    old_q = from_quaternion
+    for q in Quaternion.intermediates(q0=from_quaternion, q1=target_quaternion, n=10):
+        w = transformations.angular_velocity_from_quaternions(old_q,q,1.0/10.0)
+        old_q = q
+        delta = np.concatenate((np.zeros(3),w.vector))
+        
+        to_pose = transformations.pose_euler_to_quaternion(arm.end_effector(), delta, dt=1.0/10.0)
+        arm.set_target_pose_flex(to_pose, t=1.0/10.0)
+        rospy.sleep(1.0/10.0)
+
+    dist = Quaternion.distance(target_quaternion, Quaternion(np.roll(arm.end_effector()[3:], 1)))
+    print(dist)
+
+    # slerp = Quaternion.slerp(q0=from_quaternion,q1=target_quaternion, amount=0.5)
+
+    # q1 = from_quaternion
+    # q2 = slerp
+
+    # w = transformations.angular_velocity_from_quaternions(q1,q2,1.0)
+
+    # delta = np.concatenate((np.zeros(3),w.vector))
+
+    # print("zeros", delta)
+
+    # to_pose = transformations.pose_euler_to_quaternion(arm.end_effector(), delta, dt=1.0)
+
+    # pose = np.concatenate((arm.end_effector()[:3], np.roll(slerp.elements, -1)))
+    # arm.set_target_pose(to_pose, wait=True, t=1)
+
+def rotation_pd():
+    go_to(True)
+    kp = [5e-1,5e-1,5e-1,0.5e+1,0.5e+1,0.5e+1]
+    kd = [1e-2,1e-2,1e-2,0.1,0.1,0.1]
+    pd = utils.PID(Kp=kp, Kd=kd)
+
+    target = [-0.08337, -0.47366,  0.44836,  0.6636 ,  0.25114, -0.23011, 0.66604]
+    target = [-0.09108, -0.51868,  0.47657, -0.49215, -0.48348,  0.51335, -0.5104]
+    Qd = Quaternion(np.roll(target[3:], 1))
+
+    Qc = Quaternion(np.roll(arm.end_effector()[3:],1))
+    # rot_error = orientation_error(Qd, Qc)
+    # print(rot_error, )
+
+    timeout = 30.0
+    dt = 0.002
+    initime = rospy.get_time()
+    print("initial diff",target-arm.end_effector())
+    while not rospy.is_shutdown() \
+                and (rospy.get_time() - initime) < timeout:
+        Qc = Quaternion(np.roll(arm.end_effector()[3:],1))
+
+        rot_error = orientation_error(Qc, Qd)
+        trans_error = target[:3] - arm.end_effector()[:3]
+
+        error = np.concatenate((trans_error, rot_error))
+        print(np.round(error, 5))
+        step = pd.update(error, dt=dt) # angular velocity
+
+        pose = transformations.pose_from_angular_veloticy(arm.end_effector(), step, dt=dt)
+
+        arm.set_target_pose_flex(pose, t=dt)
+        rospy.sleep(dt)
+    print("final pose",target-arm.end_effector())
+
+def angular_velocity(Q,Q_dot):
+    return jacobian(Q)*Q_dot.elements
+
+def jacobian(Q):
+    return 2 * E(Q).T
+    
+def E(Q):
+    assert isinstance(Q, Quaternion)
+    n = Q.scalar
+    e = Q.vector
+    E = np.concatenate(([np.array(-e).T], n*np.identity(3) - spalg.skew(e)), axis=0)
+    return E
+
+def orientation_error(Qd, Qc):
+    # ne = Qc.scalar*Qd.scalar + np.dot(np.array(Qc.vector).T,Qd.vector)
+    ee = Qc.scalar*np.array(Qd.vector) - Qd.scalar*np.array(Qc.vector) + np.dot(spalg.skew(Qc.vector),Qd.vector)
+    return ee
 
 def main():
     """ Main function to be run. """
@@ -68,20 +192,15 @@ def main():
                         help='integration admittance')
     parser.add_argument('-r', '--rotation', action='store_true',
                         help='Rotation slerp')
-    parser.add_argument('--robot', action='store_true', help='for the real robot')
     parser.add_argument('--relative', action='store_true', help='relative to end-effector')
-    parser.add_argument('--beta', action='store_true', help='for the real robot. beta driver')
+    parser.add_argument('--rotation_pd', action='store_true', help='relative to end-effector')
 
     args = parser.parse_args()
 
     driver = ROBOT_GAZEBO
-    if args.robot:
-        driver = ROBOT_UR_MODERN_DRIVER
-    elif args.beta:
-        driver = ROBOT_UR_RTDE_DRIVER
 
     global arm
-    arm = Arm(ft_sensor=True, driver=driver)
+    arm = CompliantController(ft_sensor=True, driver=driver, ee_transform=[-0.,   -0.,   0.05,  0,    0.,    0.,    1.  ])
 
     if args.move:
         go_to()
@@ -96,6 +215,8 @@ def main():
         admittance_control("integration")
     if args.rotation:
         rotation()
+    if args.rotation_pd:
+        rotation_pd()
 
     print("real time", round(timeit.default_timer() - real_start_time, 3))
     print("ros time", round(rospy.get_time() - ros_start_time, 3))

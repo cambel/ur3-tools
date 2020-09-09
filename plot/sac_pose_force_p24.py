@@ -60,8 +60,8 @@ def process(filename, index=-1):
     dist, force, d_act, pdx_act, pdf_act, alpha, extra = process_data(np.array(data[index]))
     x = np.linspace(1, len(dist), len(dist))
 
-    figure, ax = plt.subplots(nrows=4, ncols=1, figsize=(7.5, 6))
-    figure.tight_layout(h_pad=-1.0)
+    figure, ax = plt.subplots(nrows=2, ncols=1, figsize=(7.5, 6))
+    figure.tight_layout(h_pad=1.0)
 
     x_labels = ['$x$','$y$','$z$',r'$\alpha$', r'$\beta$',r'$\gamma$']
     labels = [x_labels[insertion_dir], '$a_x$']
@@ -70,16 +70,6 @@ def process(filename, index=-1):
     ax[0].axhline(y=0.0, color='gray', linestyle='--')
     ax[1].axhline(y=0.0, color='gray', linestyle='--')
 
-    alpha *= -1
-    labels = [ '$K_p^x$','$K_f^x$']
-    plot_cross_data(3, x, [pdx_act[:,insertion_dir], pdf_act[:,insertion_dir]], ax, labels, colors = ['C3','C6','black'], ls = ['-', '-', '-', ':'])
-
-    labels = [ '$S$', '$a_x$', 'extra']
-    if n_actions == 25:
-        plot_cross_data(2, x, [alpha[:,insertion_dir], d_act[:,insertion_dir], extra], ax, labels, colors = ['C4', 'C1','C2'], ls = ['-', '-', '-', ':'])
-    else:
-        plot_cross_data(2, x, [alpha[:,insertion_dir], d_act[:,insertion_dir]], ax, labels, colors = ['C4', 'C1'], ls = ['-', '-', '-', ':'])
-
     labels = [ '$f_{ext}$']
     force *= np.array([30.,30,30,1,1,1])
     fx = np.linspace(1, len(force), len(force))
@@ -87,15 +77,11 @@ def process(filename, index=-1):
     plot_cross_data(1, fx, [force[:,insertion_dir]], ax, labels, colors = ['C5'], ls = ['-', '-', '-', ':'], ylim=force_limits)
 
     ax[0].set_xticklabels([])
-    ax[1].set_xticklabels([])
-    ax[2].set_xticklabels([])
-    ax[0].set_xlim([0,len(x)*1.2])
-    ax[1].set_xlim([0,len(fx)*1.2])
-    ax[2].set_xlim([0,len(x)*1.2])
-    ax[3].set_xlim([0,len(x)*1.2])
+    # ax[1].set_xticklabels([])
+    ax[0].set_xlim([0, 105])
+    ax[1].set_xlim([0, 105])
+    ax[0].set_ylim([-45,10])
     ax[1].set_ylim([-5,25])
-    ax[2].set_ylim([-1.1,1.1])
-    ax[3].set_ylim([-1.1,1.1])
 
 def plot_cross_data(i, x, ys, ax, ys_labels, colors = ['C0','C1','gray','black'], ls = ['-', '-', '-', ':'], ylim=[-1,1]):
     lw = [1, 1, 1, 1]
@@ -106,32 +92,24 @@ def plot_cross_data(i, x, ys, ax, ys_labels, colors = ['C0','C1','gray','black']
     ax[i].tick_params(axis="x", labelsize=15)
     ax[i].set_ylim(ylim)
     box = ax[i].get_position()
-    ax[i].set_position([box.x0, box.y0 + box.height * 0., box.width, box.height * 1.075])
+    # ax[i].set_position([box.x0, box.y0 + box.height * 0., box.width, box.height * 1.075])
 
-filename = '/home/cambel/dev/results/350k_SAC_randgoal_p24/state_20200727T101705.npy'
-filename = '/media/cambel/Extra/research/MDPI/real/square_peg/50k_SAC_real_square_peg/09_rot_state_20200726T170030.npy'
-filename = '/media/cambel/Extra/research/MDPI/real/square_peg/scratch_SAC_real_square_peg/real_state_20200727T144205.npy' #scratch
-filename = '/media/cambel/Extra/research/MDPI/simulation/conical/20200719T204941.374932_SAC_conical_p25/state_20200720T122714.npy'
-filename = '/home/cambel/dev/results/180k_SAC_conical_randerr_p24/state_20200727T172553.npy'
-filename = '/home/cambel/dev/results/300k_SAC_conical_p25/state_20200727T174626.npy'
-filename = '/media/cambel/Extra/research/MDPI/simulation/sim2real/350k_SAC_randgoal_p24/real_new_params_state_20200727T160625.npy'
-
-filename = '/media/cambel/Extra/research/MDPI/reality_gap/real_no_table_428_state_20200804T115215.npy'
-filename = '/media/cambel/Extra/research/MDPI/reality_gap/sim_no_table_68_state_20200804T120226.npy'
-filename = '/media/cambel/Extra/research/MDPI/reality_gap/real_no_table_x6_state_20200804T125435.npy'
-filename = '/media/cambel/Extra/research/MDPI/reality_gap/sim_table_99_state_20200804T120558.npy'
-filename = '/media/cambel/Extra/research/MDPI/reality_gap/real_table_x6_state_20200804T124832.npy'
-
-filename = '/media/cambel/Extra/research/MDPI/real/square_peg/accuracy_perf_sim2real.npy'
-filename = '/media/cambel/Extra/research/MDPI/real/square_peg/accuracy_perf_scratch.npy'
 
 filename = '/media/cambel/Extra/research/MDPI/real/square_peg/retrain_sim_soft.npy'
 filename = '/media/cambel/Extra/research/MDPI/real/square_peg/retrain_sim_x6_caucho.npy'
 filename = '/media/cambel/Extra/research/MDPI/real/square_peg/accuracy_perf_retrain_sim_x6.npy'
 
+filename = '/media/cambel/Extra/research/MDPI/reality_gap/real_table_500k_x6.npy'
+filename = '/media/cambel/Extra/research/MDPI/reality_gap/real_table_2000k_state_20200804T114922.npy'
+filename = '/media/cambel/Extra/research/MDPI/reality_gap/real_table_100k.npy'
+filename = '/media/cambel/Extra/research/MDPI/reality_gap/real_table_80k.npy'
+
+filename = '/home/cambel/dev/results/state_20200806T135611.npy'
+filename = '/home/cambel/dev/results/state_20200820T183232.npy'
+
 weight = 0.0
 episode = 0
-insertion_dir = 1
+insertion_dir = 2
 n_actions = 25  if 'p25' in filename else 24
 max_dist = None
 mode = 1

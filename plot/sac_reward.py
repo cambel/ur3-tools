@@ -14,7 +14,7 @@ np.set_printoptions(linewidth=np.inf)
 colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
 mode = 2
-weight = 0.96
+weight = 0.97
 # filename ="/media/cambel/Extra/research/MDPI/simulation/conical/retrain_randerror_SAC_conical_p25"
 # filename1 ="/media/cambel/Extra/research/MDPI/simulation/tcn-vs-default/randinit100k-force5N_SAC_wave-parallel-14"
 # filename2 ="/media/cambel/Extra/research/MDPI/simulation/tcn-vs-default/randinit75k-force5N_SAC_default-parallel-14"
@@ -61,19 +61,31 @@ data = [
 # filename1 = '/media/cambel/Extra/research/MDPI/simulation/domain-rand/individual/20200711T211003.734830_SAC_rand_error_5mm_p14'
 
 data = [
-'/media/cambel/Extra/research/MDPI/simulation/curriculum24/individual/20200715T182836.015094_SAC_randinit_p24',
-'/media/cambel/Extra/research/MDPI/simulation/curriculum24/individual/20200715T232352.240061_SAC_randgoal_p24',
-'/media/cambel/Extra/research/MDPI/simulation/curriculum24/individual/20200716T014320.305416_SAC_randstiff_p24',
-'/media/cambel/Extra/research/MDPI/simulation/curriculum24/individual/20200716T105106.195386_SAC_randerror_p24',
-'/media/cambel/Extra/research/MDPI/simulation/curriculum24/individual/20200716T061603.123025_SAC_rand_all_p24',
+'/media/cambel/Extra/research/MDPI/simulation/domain_rand/20200805T215202.243682_SAC_randinit_p24',
+'/media/cambel/Extra/research/MDPI/simulation/domain_rand/20200806T122312.370407_SAC_randgoal_p24',
+'/media/cambel/Extra/research/MDPI/simulation/domain_rand/20200806T154222.166939_SAC_randstiff_p24',
+'/media/cambel/Extra/research/MDPI/simulation/domain_rand/20200806T191441.179942_SAC_rand_all_p24',
+'/media/cambel/Extra/research/MDPI/simulation/domain_rand/20200806T222948.962759_SAC_randerror_p24',
 ]
 
-# data = [
-# '/media/cambel/Extra/research/MDPI/simulation/tcn-vs-default/version2/20200804T213248.774807_SAC_nn_policy',
-# '/media/cambel/Extra/research/MDPI/simulation/tcn-vs-default/version2/20200804T162355.027278_SAC_nn_policy',
+data = [
+'/media/cambel/Extra/research/MDPI/simulation/tcn-vs-default/version2/20200804T190253.159771_SAC_tcn_policy',
+'/media/cambel/Extra/research/MDPI/simulation/tcn-vs-default/version2/20200804T135723.293938_SAC_tcn_policy',
+'/media/cambel/Extra/research/MDPI/simulation/tcn-vs-default/version2/20200804T213248.774807_SAC_nn_policy',
+'/media/cambel/Extra/research/MDPI/simulation/tcn-vs-default/version2/20200804T162355.027278_SAC_nn_policy',
+]
+
+data = [
+'/media/cambel/Extra/research/MDPI/simulation/curriculum24/force_input/SAC_baseline',
 # '/media/cambel/Extra/research/MDPI/simulation/tcn-vs-default/version2/20200804T190253.159771_SAC_tcn_policy',
-# '/media/cambel/Extra/research/MDPI/simulation/tcn-vs-default/version2/20200804T135723.293938_SAC_tcn_policy',
-# ]
+# '/media/cambel/Extra/research/MDPI/simulation/domain_rand/20200805T215202.243682_SAC_randinit_p24',
+'/media/cambel/Extra/research/MDPI/simulation/curriculum24/force_input/SAC_no_action_input',
+'/media/cambel/Extra/research/MDPI/simulation/curriculum24/force_input/SAC_force_input_cost',
+# '/media/cambel/Extra/research/MDPI/simulation/curriculum24/force_input/SAC_no_force_input',
+'/media/cambel/Extra/research/MDPI/simulation/curriculum24/force_input/SAC_force_input_wrt_goal',
+'/media/cambel/Extra/research/MDPI/simulation/curriculum24/force_input/SAC_baseline_random',
+'/media/cambel/Extra/research/MDPI/simulation/curriculum24/force_input/SAC_force_input_random',
+]
 
 def pad(arr, length):
     new_arr = []
@@ -103,6 +115,7 @@ def prepare_data(files, weight, points=12000):
     avg_len = 0
     for f in files:
         data = np.load(f+"/detailed_log.npy", allow_pickle=True)
+        data = data[15:]
         tmp = None
         # if mode == 2 or mode == 4:
         #     index = 3 if mode == 0 or mode == 2 else 2
@@ -176,11 +189,11 @@ def plot_ft():
     # simple_plot(ax, data[6:8], weight, alpha, colors[3], 'Random uncertainty error', '-', linewidth=1)
     # simple_plot(ax, data[8:], weight, alpha, colors[5], 'Random All', '-', linewidth=1)
 
-    simple_plot(ax, [data[0]], weight, alpha, colors[0], 'Base Random initial pose', '-', linewidth=1)
-    simple_plot(ax, [data[1]], weight, alpha, colors[1], '1) Random goal', '-', linewidth=1)
-    simple_plot(ax, [data[2]], weight, alpha, colors[2], '2) Random stiffness', '-', linewidth=1)
-    simple_plot(ax, [data[3]], weight, alpha, colors[3], '3) Random uncertainty error', '-', linewidth=1)
-    simple_plot(ax, [data[4]], weight, alpha, colors[4], '4) Random All', '-', linewidth=1)
+    # simple_plot(ax, [data[0]], weight, alpha, colors[0], 'Base Random initial pose', '-', linewidth=1)
+    # simple_plot(ax, [data[1]], weight, alpha, colors[1], '1) Random goal', '-', linewidth=1)
+    # simple_plot(ax, [data[2]], weight, alpha, colors[2], '2) Random stiffness', '-', linewidth=1)
+    # simple_plot(ax, [data[3]], weight, alpha, colors[3], '3) Random uncertainty error', '-', linewidth=1)
+    # simple_plot(ax, [data[4]], weight, alpha, colors[4], '4) Random All', '-', linewidth=1)
 
     # simple_plot(ax, [data[0]], weight, alpha, colors[4], 'Parallel-14', '-', linewidth=1)
     # simple_plot(ax, [data[1]], weight, alpha, colors[7], 'Parallel-24', '-', linewidth=1)
@@ -188,11 +201,18 @@ def plot_ft():
     # simple_plot(ax, [data[0]], weight, alpha, colors[0], 'Perfect estimation', '-', linewidth=1)
     # simple_plot(ax, [filename1], weight, alpha, colors[1], 'Estimation error 5mm', '-', linewidth=1)
 
-    # simple_plot(ax, [data[0]], weight, alpha, colors[0], 'Random initial pose p-24', '-', linewidth=1)
-    # simple_plot(ax, [data[1]], weight, alpha, colors[1], 'Random goal p-24', '-', linewidth=1)
-    # simple_plot(ax, [data[2]], weight, alpha, colors[2], 'Random stiffness p-24', '-', linewidth=1)
-    # simple_plot(ax, [data[3]], weight, alpha, colors[3], 'Random uncertainty error p-24', '-', linewidth=1)
-    # simple_plot(ax, [data[4]], weight, alpha, colors[5], 'Random All p-24', '-', linewidth=1)
+    # simple_plot(ax, [data[0]], weight, alpha, colors[0], 'Random initial pose', '-', linewidth=1)
+    # simple_plot(ax, [data[1]], weight, alpha, colors[1], 'Random goal', '-', linewidth=1)
+    # simple_plot(ax, [data[2]], weight, alpha, colors[2], 'Random stiffness', '-', linewidth=1)
+    # simple_plot(ax, [data[3]], weight, alpha, colors[3], 'Random uncertainty error', '-', linewidth=1)
+    # simple_plot(ax, [data[4]], weight, alpha, colors[4], 'Random All', '-', linewidth=1)
+
+    simple_plot(ax, [data[0]], weight, alpha, colors[0], 'Policy input w/o $F_g$', '-', linewidth=1)
+    # simple_plot(ax, [data[1]], weight, alpha, colors[1], 'Policy input w/o $a_{t-1}$', '-', linewidth=1)
+    simple_plot(ax, [data[2]], weight, alpha, colors[1], 'Policy input with $F_g$', '-', linewidth=1)
+    # simple_plot(ax, [data[3]], weight, alpha, colors[3], 'insertion force input wrt goal', '-', linewidth=1)
+    # simple_plot(ax, [data[4]], weight, alpha, colors[4], 'baseline DR', '-', linewidth=1)
+    # simple_plot(ax, [data[5]], weight, alpha, colors[5], 'insertion force input DR', '-', linewidth=1)
 
     # simple_plot(ax, [filename], weight, alpha, colors[0], 'Conical helix p-25', '-', linewidth=1)
 
@@ -200,7 +220,7 @@ def plot_ft():
         plt.xlabel("Steps", size='xx-large')
     else:
         plt.xlabel("Episode", size='xx-large')
-    plt.ylim([-50, 220])
+    plt.ylim([-50, 230])
     plt.ylabel("Reward", size='xx-large')
     plt.legend()
     plt.grid(linestyle='--', linewidth=0.4)
